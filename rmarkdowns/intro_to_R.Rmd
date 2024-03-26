@@ -108,6 +108,15 @@ my_age + 5 # how old will you be in 5 years?
 #### <span style="color: red;">Challenge 1</span>
 Create a my_name variable with your name assigned to the variable instead of "Victoria DelaCruz". Then, create a my_age variable with your age. 
 
+```{r}
+my_name <- "Connor"
+
+my_age = 25
+
+my_age + 5
+```
+
+
 #### Different Types of Data
 
 Understanding the different types of data is crucial when building out your visualizations and throughout the data analysis process. It is super useful when trying to figure out what graph to use or what story you're trying to tell through your data.
