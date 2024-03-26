@@ -1,0 +1,107 @@
+---
+title: "Final Project Guide"
+author: "Connor Flynn | Victoria DelaCruz"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+
+<img src="`r here::here('logos/SpiceLogo1.png')`" width="240" /> <img src="`r here::here('logos/cifal_logo.png')`" width="200" />
+
+
+```{r, include=FALSE}
+library(vembedr)
+```
+
+```{r, echo=FALSE}
+embed_url("https://www.youtube.com/watch?v=NzCE_LGKt8U")
+```
+
+### Congrats!
+
+You have made it to the end of the course, and now it is time for your final project :)
+
+### General Guidelines
+
+The final project will be a screen recorded video (use zoom) of you going through a *knitted Rmd* that **tells a story** with data visualizations 
+
+- Requirements
+  - A minimum of 4 Data Visualizations generated from *either* the SDR-2023-Data.csv or SIDS-SDR-2023-data.csv
+  - Context 
+    - Minimum of 8 sentences describing and interpreting each visualization
+      - Questions to consider
+        - What is the variable(s) shown? Why did you choose the variable(s)
+          - **Be sure** to describe the variables 
+            - For example:
+              - Explain the variable normalized_score_sdg7_elecac is the percentage of the population with access to electricity
+        - Why did you choose to visualize the data in this way? (map vs bar chart vs scatter plot etc)
+        - What does the visualization show us?
+  - A narrative
+    - This *cannot* be a document of 4 visualizations that don't tie into each other / make sense together. 
+    - Supplemented by your written sentences, the visualizations must tell a story
+  - The code must be **reproducible**
+    - You need to be able to Restart R, clear your environment (broom icon), and then hit the knit button to produce a knitted Rmd (similar to those on the course website). If there are any errors in your code, the knit button will prompt an error message instead of producing a document
+    
+- Project Suggestions
+  - We want you to **be as creative as possible** but here are a few suggestions if you could use some guidance
+    - *Focus on a country* and tell the story of that country within the SDG's
+      - Give a brief textual description describing the country
+        - Add some info that is not related to the SDG's to give the audience context
+      - What is the countries overall SDG Score?
+      - Make a plot of the 17 normalized sdg scores for that country
+      - Highlight the SDG the country has the most success in and the SDG where the largest challenges remain
+        - Explore the different indicators in each of these SDG's
+      - Which cluster does the country fall into?
+        - When you increase the number of clusters, which cluster does the country fall into?
+      - For the scatter plots/linear regression in the statistics lesson:
+        - Does the country follow the trend or is it an outlier?
+          - Try a few combinations of SDG's on the x and y axis
+        - How does the country compare to the other countries in it's region?
+    - *Focus on an SDG* and tell the story of that SDG
+      - What is the global distribution of that SDG's scores?
+      - Visualize the SDG on a map
+      - What are the indicators in that SDG?
+        - What are they're normalized scores?
+      - What does the global trend look like for that SDG?
+        - ↑ ➚ →	↓
+          - What do the trends look like for the indicators?
+      - What are the strongest predictors of that SDG's normalized score? (random forest in machine learning)
+        - How about the strongest predictors of one of the indicators?
+    
+
+### Coding Guidelines
+
+Awesome! So let's think about the format of your R Markdown
+
+First, you need to create a New R Markdown
+
+- Name the R Mardown you project title
+- Save your R Markdown file with the save icon (no_spaces_in_the_name)
+
+Then you will want all the packages we use to be loaded in with `library()` in the very first code chunk 
+
+
+Next, you'll want to read in the csv we're using (*either* the SDR-2023-Data.csv or SIDS-SDR-2023-data.csv)
+
+  - To do this will assign the dataframe a name with `<-` and use the `read_csv()` and `here()` functions
+  
+Then we'll clean the names of the columns with `clean_names()`
+
+From here, you're off to the races!
+
+  - Make maps
+  - Do some stats with scatter plots, linear regression, and correlation coefficients
+    - Filter the data for a specific region and make a correlation matrix
+  - Make bar plots and histograms
+  - Ask questions about which countries cluster together
+    - Increase the number of clusters
+  - Predict an SDG score or indicator score and look at the most important features regarding the prediction
+  
+**Be creative, Ask questions, Don't be afraid to try, and Enjoy the process**
+
+
+
+
+

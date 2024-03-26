@@ -1,0 +1,277 @@
+---
+title: "Advanced Visualizations"
+author: "Connor Flynn | Victoria DelaCruz"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+
+<img src="`r here::here('logos/SpiceLogo1.png')`" width="240" /> <img src="`r here::here('logos/cifal_logo.png')`" width="200" />
+
+### Today's Topics
+
+1. Customizing visualizations
+2. Making static visualizations interactive with *plotly*
+3. Creating interactive maps with *leaflet*
+
+
+### Setup
+
+Loading in our Libraries
+
+
+```{r setup, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(plotly)
+library(rnaturalearth)
+library(leaflet)
+library(sf)
+library(vembedr)
+```
+
+```{r, echo=FALSE}
+vembedr::embed_url("https://www.youtube.com/watch?v=XS_zXa0prMw")
+```
+
+
+Read in 2023 Sustainable Development Data with *read_csv()* and *here()*
+
+
+```{r, message=FALSE}
+sdr_data <- read_csv(here("data/SDR-2023-Data.csv"))
+```
+
+Clean column names
+
+```{r}
+sdr_data <- sdr_data %>% 
+  clean_names()
+```
+
+
+### Customize a Histogram
+
+Let's start with the histogram you created last lesson with ggplot() and geom_histogram()
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(sdr_data, aes(x = goal_4_score, fill=regions_used_for_the_sdr)) +
+  geom_histogram()
+```
+
+
+Looks Nice, but let's improve it!
+  
+  - add a theme with theme_minimal()
+  - add a color palette with scale_fill_viridis_d()
+  - add a title, x axis label, y axis label, and legend label with labs()
+
+We start with the same exact code and add to it with `+`  
+  
+```{r, message=FALSE, warning=FALSE}
+ggplot(sdr_data, aes(x = goal_4_score, fill=regions_used_for_the_sdr)) +
+  geom_histogram() +
+  theme_minimal() +
+  scale_fill_viridis_d() +
+  labs(title = "Distributions of SDG 4 Scores",
+       x = "SDG 4 Score",
+       y = "Number of Countries",
+       fill = "Region")
+  
+```
+
+
+
+Awesome, looking much better!
+
+  - However, it's still a little tricky to tell exactly how many countries in each region have each SDG 4 Score
+  - There's a few ways to go address this, one of them is to make the plot interactive with ggplotly()
+  
+### Making static visualizations interactive
+
+Interactive visualizations are a really exciting part of data science! Interactivity engages the viewer by allowing them to explore the data in a way they cannot with static visualizations
+  
+  - The great part is that with the ggplotly() function from the plotly package, making interactive visualizations is very simple
+  
+    - First we create the plot with the exact same code
+    
+      - The *only difference* is that we assign the plot a name with `<-` the same way we do with dataframes or lists
+      
+      - Next we put the name that we give the plot into the ggplotly function
+   
+      
+```{r}
+goal_4_histogram <- ggplot(sdr_data, aes(x = goal_4_score, fill=regions_used_for_the_sdr)) +
+  geom_histogram() +
+  theme_minimal() +
+  scale_fill_viridis_d() +
+  labs(title = "Distributions of SDG 4 Scores",
+       x = "SDG 4 Score",
+       y = "Number of Countries",
+       fill = "Region")
+
+ggplotly(goal_4_histogram)
+```
+
+
+
+Epic! Now we can hover over the histogram and get some info
+
+  - For example: We can see 2 countries in the LAC region have a score of 68
+  
+We can also double-click the boxes in the legend to only view the regions we're interested in
+
+#### <span style="color: red;">Challenge 1</span>
+
+Here is the code for a scatter plot you made in the last lesson:
+
+```{r, warning = FALSE}
+ggplot(data = sdr_data, aes(x= goal_3_score, y = goal_4_score, color = regions_used_for_the_sdr)) +
+  geom_point()
+```
+
+*Edit the code chunk above* that generates the plot to:
+
+- add a theme with theme_minimal()
+- add a color palette with scale_fill_viridis_d()
+- add the appropriate title, x axis label, y axis label, and legend label with labs()
+
+*AND*
+
+- make it interactive with ggplotly()
+
+  - hint: you will have to assign a name to the plot
+
+
+
+### Creating interactive maps with `leaflet`
+
+This takes a few fun steps to do
+
+1. We need data on countries and their physical location on the globe
+
+  - Lucky for us the `rnaturalearth` package has this information for us
+      
+    - We use the ne_countries() function to access the data and we assign it the name *world*
+
+
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+```
+
+- Now we have a dataframe named *world* in our environment
+  
+  - It has 241 locations/countries (rows) and 64 columns describing each location/country
+  
+  - We are only interested in 3 columns:
+    
+    - Country Name
+    - ISO3 codes which are three-letter country codes 
+    - Geometry
+      - This column contains the info describing a country's physical location on the globe
+      
+Let's select the three columns we are interested, making the dataframe much smaller 
+
+```{r}
+world <- world %>% 
+  select(name_long, iso_a3, geometry)
+```
+
+We're almost ready to join these dataframes
+
+  - We have ISO3 codes in both of our dataframes (sdr_data and world) but the columns that contain the ISO3 codes have different names
+    
+    - In the world dataframe it is iso_a3
+    - In the sdr_data dataframe it is country_code_iso3
+    
+Let's change the column in sdr_data called country_code_iso3 to iso_a3 to match the world dataframe
+
+```{r}
+# Rename a column in a data frame or matrix
+colnames(sdr_data)[which(colnames(sdr_data) == "country_code_iso3")] <- "iso_a3"
+```
+
+Perfect! Now we can join
+
+- There are many different ways to join data
+    
+  - Check out this [cool resource on joining data in R](https://r4ds.hadley.nz/joins.html#sec-mutating-joins)
+
+Let's use the `left_join()` function
+
+- We use left join because we want the 3 columns we are interested in from world to be joined/added  to sdr_data
+  
+  - There are 35 countries/places in the world dataframe that are not in our sdr_data. Using `full_join()` would include these countries/places in the new joined dataframe, however, all the SDG info would be NA. TO avoid this, we'll use `left_join()`
+  
+  - We'll name the new joined dataframe *sdr_data_world_joined* and we will join by the column the 2 dataframes share: iso_a3
+
+
+```{r}
+sdr_data_world_joined <- left_join(sdr_data, world, by = "iso_a3")
+```
+
+Nice!
+
+The next 4 code chunks are slightly technical regarding the class of sdr_data_world_joined. We can check the class with the 'class()' function
+
+```{r}
+class(sdr_data_world_joined)
+```
+
+Right now, sdr_data_world_joined is a dataframe. In order to use the `leaflet` package that generates the map, we need sdr_data_world_joined to be an sf dataframe. sf stands for spatial features. Converting sdr_data_world_joined to class *sf dataframe* is easy with the `st_as_sf()` function and it allows leaflet to interpret the geometry column as something it can map
+
+```{r}
+sdr_data_world_joined <- st_as_sf(sdr_data_world_joined)
+```
+
+Now lets check the class again to make sure sdr_data_world_joined is of class sf dataframe
+
+```{r}
+class(sdr_data_world_joined)
+```
+
+The last step before mapping with leaflet is specifying a coordinate reference system (crs). There are many different coordinate refernece systmes, and here we choose WGS84
+
+- WGS84 stands for World Geodetic System 1984. It's a global standard for measuring locations on Earth's surface. WGS84 defines a coordinate system using longitude and latitude coordinates, where longitude measures east-west position and latitude measures north-south position. This system is widely used in GPS (Global Positioning System) devices, mapping applications, and geographic information systems (GIS) because it provides a consistent and accurate way to represent locations anywhere on Earth.
+
+```{r}
+sdr_data_world_joined <- st_transform(sdr_data_world_joined, "+proj=longlat +datum=WGS84")
+```
+
+Awesome! We're ready to make a map 
+
+- Let's map SDG 7 Scores 
+
+  - the my_text part of the code determines what happens when we hover over a country
+  
+  - the `leaflet()` function generates the map from the *sdr_data_world_joined* dataframe
+  
+    - we specify SDG 7 scores in the "color =" argument of the function 
+
+```{r}
+mytext <- paste(
+    "Country: ", sdr_data_world_joined$country,"<br/>", 
+    "Goal 7 Score: ", round(sdr_data_world_joined$goal_7_score, 2), 
+    sep="") %>%
+  lapply(htmltools::HTML)
+
+leaflet(sdr_data_world_joined) %>% 
+  addTiles()  %>% 
+  setView( lat=10, lng=0 , zoom=2) %>%
+  addPolygons(stroke = FALSE, fillOpacity = 0.5, smoothFactor = 0.5, color = ~colorQuantile("YlOrRd", goal_7_score)(goal_7_score), label = mytext)
+```
+#### <span style="color: red;">Challenge 2</span>
+
+Can you edit the code chunk above that generates the map to:
+
+- Map a different sdg score
+- Change the color palette from "YlOrRd" to another palette
+  - Hint: [look under the RColorBrewer Palettes here](https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/)
+    
+
+
+

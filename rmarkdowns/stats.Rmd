@@ -1,0 +1,222 @@
+---
+title: "Statistics"
+author: "Connor Flynn | Victoria DelaCruz"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+<img src="`r here::here('logos/SpiceLogo1.png')`" width="240" /> <img src="`r here::here('logos/cifal_logo.png')`" width="200" />
+
+### Today's Topics
+
+1. **Linear Regression** How can we tell if two variables in our dataset are correlated with each other?
+
+2. **Correlation Matrix** How can we determine correlation between all sdg scores more efficiently than by employing/visualizing linear regression for every pair of sdg scores? Can we see broader patterns?
+
+
+### Setup
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(ggpubr)
+library(janitor)
+library(ggcorrplot)
+library(vembedr)
+```
+
+
+```{r, echo=FALSE}
+embed_url("https://www.youtube.com/watch?v=Gzgj73UQ__A")
+```
+
+
+Read in 2023 Sustainable Development Data with *read_csv()* and *here()*
+
+
+```{r, message=FALSE}
+sdr_data <- read_csv(here("data/SDR-2023-Data.csv"))
+```
+
+Clean column names with clean_names() from the janitor package
+
+```{r}
+sdr_data <- sdr_data %>% 
+  clean_names()
+```
+
+
+Let's start with the scatter plot you learned how to create in the last lesson
+
+```{r, warning=FALSE}
+ggplot(sdr_data, aes(x = goal_7_score, 
+                     y = goal_1_score)) +
+  geom_point() +
+  theme_minimal() 
+```
+
+It seems that there is a general trend that countries with higher goal 7 scores also have higher goal 1 scores and vice versa
+  
+- Note: There are outliers regarding this trend 
+    
+  - Countries with a high goal 7 score but low goal 1 score and vice versa
+  
+  
+### Linear Regression
+
+- Let's draw a line through the points to help us visually examine the potential relationship between the 2 sdg scores by using geom_smooth()
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(sdr_data, aes(x = goal_7_score, 
+                     y = goal_1_score)) +
+  geom_point() +
+  geom_smooth() +
+  theme_minimal() 
+```
+
+Interesting, our line does go up and to the right, indicating a *positive correlation*
+
+
+  - A **positive correlation** exists when two variables move in the same direction. This means that as one variable increases, the other variable also tends to increase. Similarly, when one variable decreases, the other variable tends to decrease. Graphically, a positive correlation is represented by a trend line sloping upwards from left to right on a scatter plot.
+
+    - Example: The more hours you spend studying for an exam, the higher your exam score is likely to be. In this case, studying time and exam score have a positive correlation.
+
+  - A **negative correlation** exists when two variables move in opposite directions. This means that as one variable increases, the other variable tends to decrease, and vice versa. Graphically, a negative correlation is represented by a trend line sloping downwards from left to right on a scatter plot.
+    
+    - Example: The more days a person exercises per week, the lower their body weight tends to be. In this case, the number of exercise days and body weight have a negative correlation.
+    
+
+Now, we can view the trend line moves up and to the right indicating a positive correlation. This is a good start
+
+  - Is there a way we can measure how strong a positive or negative correlation is? Yes, the **correlation coefficient**
+    
+    - Let's calculate and print the correlation coefficient on the scatter plot with the stat_cor() function
+    
+    
+```{r, warning=FALSE, message=FALSE}
+ggplot(sdr_data, aes(x = goal_7_score, 
+                     y = goal_1_score)) +
+  geom_point() +
+  geom_smooth() +
+  stat_cor() +
+  theme_minimal() 
+```
+
+Awesome! Now we have a correlation coefficent (R = 0.79) What does this mean?
+
+- In both positive and negative correlations, the strength of the relationship between the variables can vary. The correlation coefficient is a statistical measure that quantifies the strength and direction of a correlation, ranging from -1 to +1. A correlation coefficient of +1 indicates a perfect positive correlation, -1 indicates a perfect negative correlation, and 0 indicates no correlation.
+
+  - So 0.79 out of a potential 1 indicates a relatively strong positive correlation
+  
+- Let's explore correlation coefficient with [this very cool hands on resource](https://rpsychologist.com/correlation/)
+
+Lastly for this graph, we also see a p value (p < 2.2e -16)
+  
+  - The p-value is a measure that helps determine the **significance** of the results obtained from a statistical test
+    
+    - Commonly, a significance level (α) of 0.05 (or 5%) is used in hypothesis testing. If the p-value is less than the significance level (p < α), it is considered statistically significant, indicating that the observed results are unlikely to have occurred by chance alone, and the null hypothesis is rejected.
+      
+      - This notation means that the p-value is less than 2.2e -16. In other words, it's an extremely small value, close to zero.
+
+
+### Correlation Matrix
+
+Now that we understand what a correlation coefficient is and how we can calculate it for 2 sdg scores, can we calculate a correlation coefficient for every pair of sdg scores with one function and plot?
+
+
+Let's create a new dataframe (sdr_scores) that only contains overall goal scores, not indicator scores, for each goal and each country
+
+```{r}
+sdr_scores <- sdr_data %>%
+  select(
+    goal_1_score, goal_2_score, goal_3_score, goal_4_score, goal_5_score,
+    goal_6_score, goal_7_score, goal_8_score, goal_9_score, goal_10_score,
+    goal_11_score, goal_12_score, goal_13_score, goal_14_score, goal_15_score,
+    goal_16_score, goal_17_score
+  )
+```
+
+
+Now, let's create a matrix from the sdr_scores dataframe with the as.matrix() function
+
+```{r}
+sdr_scores_matrix <- as.matrix(sdr_scores)
+```
+
+Now that we have a matrix, we can calculate the correlation coefficients for each pair of sdg scores and store the object as cor
+
+```{r}
+cor <- cor(sdr_scores_matrix, use = "complete.obs")
+```
+
+
+Finally, we can plot the correlation coefficients with ggcorrplot!
+
+
+```{r}
+ggcorrplot(cor, method = "circle", type = "lower", lab = TRUE, lab_size = 2) +
+  theme(axis.text.y = element_text(size = 8),
+  axis.text.x = element_text(size = 8))
+```
+
+Interesting! 
+
+There's a few takeaways here
+
+- Most goals have a positive correlation that is relatively strong
+  
+  - The strongest positive correlation is between goal 3 scores and goal 9 scores 
+    
+    - Good Health and Industry Innovation and Infrastructure
+  
+- Goal 12 and 13 scores seem to have relatively strong negative correlations with the rest of the SDG scores
+
+  - What is this suggesting?
+    
+    - Goal 12 is Responsible Consumption & Production and Goal 13 is Climate Action
+      
+      - This suggests that countries that have low scores regarding consumption and climate tend to have high scores for things like poverty. health, education, etc and vice versa. This is thought provoking regarding the environmental costs of being and economically advantaged country with higher scores for poverty, health, education etc
+  
+  - The strongest negative correlation is between Goal 12 scores and Goal 16 scores
+  
+- Goal 14 scores (Life below water) is the only goal that tends to be uncorrelated with the rest of the goals
+  
+  - Goal 10 & 15 also have relatively weak correlations with the rest of the goals
+  
+  
+To circle back and reinforce how the linear regression (line drawn through our scatter plot) and correlation coefficients in the matrix above are related 
+
+- There is a negative correlation between Goal 9 scores and Goal 12 scores: correlation coefficient (-0.82 out of a possible -1)
+  
+  - What does this look like on scatter plot?
+  
+```{r, warning=FALSE, message=FALSE}
+ggplot(sdr_data, aes(x = goal_12_score, 
+                     y = goal_9_score)) +
+  geom_point() +
+  geom_smooth() +
+  stat_cor() +
+  theme_minimal() 
+
+```
+
+### <span style="color: red;">Challenge 1</span>
+
+- Edit the code chunk above to plot a linear regression of 2 different sdg scores 
+
+  - Make the plot interactive with ggplotly() so you can hover over the points and see the country, x axis sdg score, and y axis sdg score
+    
+    - **Hint** to be able to tell which point is which country, you will have to add `label = country` in the aes function after you tell ggplot what you which scores you want on the x and y axis
+     - **Hint** to use the ggplotly() function, you will need to use `library()` to load in the plotly package in the first code chunk in this R Markdown
+
+  - in 4-6 sentences, come up with a hypotheses for the positive or negative correlation between the 2 goals
+      
+      - are there any points that don't follow the trend (outliers)
+        
+        - which country(s) are outliers?

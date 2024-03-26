@@ -1,0 +1,28 @@
+name: "my-website"
+navbar:
+  title: "SDG Analytics in R"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Logistics"
+      href: README.html
+    - text: "Course Intro"
+      href: rmarkdowns/course_introduction.html
+    - text: "Installation Guide"
+      href: rmarkdowns/installation_guide.html
+    - text: "Intro to R"
+      href: rmarkdowns/intro_to_R.html
+    - text: "Basic Data Viz"
+      href: rmarkdowns/basic_viz.html
+    - text: "Advanced Viz"
+      href: rmarkdowns/advanced_viz.html
+    - text: "Stats"
+      href: rmarkdowns/stats.html
+    - text: "ML"
+      href: rmarkdowns/machine_learning.html
+    - text: "Final Project Guide"
+      href: rmarkdowns/final_project_guide.html
+    - text: "Troubleshooting Guide"
+      href: rmarkdowns/troubleshooting.html
+
+    

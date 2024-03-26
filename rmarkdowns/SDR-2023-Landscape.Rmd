@@ -1,0 +1,295 @@
+---
+title: "SDR 2023 Landscape"
+author: "Connor Flynn"
+date: "1/30/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(naniar)
+library(plotly)
+library(ggpubr)
+library(leaflet)
+library(rnaturalearth)
+library(sf)
+library(missRanger)
+library(cluster)
+library(factoextra)
+library(randomForest)
+library(rnaturalearthdata)
+
+```
+
+
+```{r}
+sdr_data <- read.csv(here("data/SDR-2023-Data.csv"))
+```
+
+```{r}
+sdr_data <- sdr_data %>% 
+  clean_names()
+```
+
+
+```{r}
+
+unique_colors <- c("green" = "darkseagreen", "orange" = "darkorange1", "red" = "coral2", "yellow" = "darkgoldenrod2")
+
+goal_7_faceted_bar_plot <- ggplot(data = sdr_data, aes(x = goal_7_score, 
+                            y = reorder(country, goal_7_score),
+                            fill = goal_7_dash)) +
+  geom_col(stat = "identity") +
+  facet_wrap(~regions_used_for_the_sdr, scales = "free_y") +
+  scale_fill_manual(values = unique_colors) +  # Specify manual fill scale
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 4)) +
+  labs(x = "SDG 7 Score",
+       y = "")
+
+ggplotly(goal_7_faceted_bar_plot)
+
+```
+
+```{r}
+ggplot(sdr_data, aes(x = goal_7_score, 
+                     y = goal_1_score)) +
+  theme_minimal() +
+  geom_point() +
+  geom_smooth() +
+  stat_cor()
+```
+
+```{r}
+goal_7_and_9_scatter_plot <- ggplot(sdr_data, aes(x = goal_7_score, 
+                     y = goal_1_score,
+                     color = regions_used_for_the_sdr,
+                     label = country)) +
+  theme_minimal() +
+  geom_point() +
+  scale_color_brewer(palette = "Set3")
+
+ggplotly(goal_7_and_9_scatter_plot)
+
+```
+
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+```
+
+```{r}
+world <- world %>% 
+  select(name_long, iso_a3, geometry)
+```
+
+
+```{r}
+# Rename a column in a data frame or matrix
+colnames(sdr_data)[which(colnames(sdr_data) == "country_code_iso3")] <- "iso_a3"
+```
+
+
+```{r}
+joined_df <- left_join(sdr_data, world, by = "iso_a3")
+```
+
+
+```{r}
+world_df_joined <- st_as_sf(joined_df)
+```
+
+```{r}
+world_df_joined <- st_transform(world_df_joined, "+proj=longlat +datum=WGS84")
+```
+
+
+```{r}
+mytext <- paste(
+    "Country: ", world_df_joined$country,"<br/>", 
+    "Goal 7 Score: ", round(world_df_joined$goal_7_score, 2), 
+    sep="") %>%
+  lapply(htmltools::HTML)
+
+leaflet(world_df_joined) %>% 
+  addTiles()  %>% 
+  setView( lat=10, lng=0 , zoom=2) %>%
+  addPolygons(stroke = FALSE, fillOpacity = 0.5, smoothFactor = 0.5, color = ~colorQuantile("YlOrRd", goal_7_score)(goal_7_score), label = mytext)
+```
+
+Correlation matrix
+
+```{r}
+sdr_scores <- sdr_data %>%
+  select(
+    goal_1_score, goal_2_score, goal_3_score, goal_4_score, goal_5_score,
+    goal_6_score, goal_7_score, goal_8_score, goal_9_score, goal_10_score,
+    goal_11_score, goal_12_score, goal_13_score, goal_14_score, goal_15_score,
+    goal_16_score, goal_17_score
+  )
+```
+
+
+
+```{r}
+sdr_scores_matrix <- as.matrix(sdr_scores)
+```
+
+
+```{r}
+cor <- cor(sdr_scores_matrix, use = "complete.obs")
+```
+
+```{r}
+ggcorrplot::ggcorrplot(cor, method = "circle", type = "lower", lab = TRUE)
+```
+
+goal 7 tile
+
+```{r}
+goal_seven_data <- sdr_data %>% 
+  select(country, regions_used_for_the_sdr, normalized_score_sdg7_elecac, normalized_score_sdg7_cleanfuel, normalized_score_sdg7_co2twh, normalized_score_sdg7_renewcon, goal_7_dash, goal_7_trend)
+```
+
+
+```{r}
+# Melt the data for easier plotting
+# Reshape the data using pivot_longer
+melted_data <- pivot_longer(goal_seven_data, cols = starts_with("normalized_score_sdg7"), 
+                            names_to = "variable", values_to = "value")
+
+# Plotting heatmap using geom_tile
+ggplot(melted_data, aes(x = variable, y = country, fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c() +
+  facet_wrap(~regions_used_for_the_sdr, scales = "free_y") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 5),
+        axis.text.y = element_text(size = 5)) +
+  labs(x = "", y = "", fill = "Score") 
+```
+*I want dash and trend also on the x axis*
+
+
+```{r}
+ggplot(sdr_data, aes(x = goal_7_score, fill = regions_used_for_the_sdr)) +
+  geom_histogram(color = "black") +
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+
+
+
+
+Missing
+
+
+```{r}
+gg_miss_var(sdr_scores)
+```
+
+```{r}
+ggplot(sdr_data, aes(x = goal_7_score, 
+                     y = goal_1_score,
+                     color = regions_used_for_the_sdr,
+                     label = country)) +
+  theme_minimal() +
+  geom_miss_point() +
+  scale_color_brewer(palette = "Set3")
+
+
+```
+
+
+
+
+
+Cleaning and Imputation for ML
+- Clustering and Random Forest Regression/Classification
+
+```{r}
+sdr_data_normalized_scores <- sdr_data %>% 
+  select(country, contains("normalized_score"))
+```
+
+```{r}
+gg_miss_var(sdr_data_normalized_scores, show_pct = TRUE)
+```
+```{r}
+sdr_data_normalized_scores_less_na <- sdr_data_normalized_scores %>%
+  select(where(~ sum(is.na(.))/length(.) <= 0.3))
+```
+
+
+```{r}
+sdr_data_imputed <- missRanger(sdr_data_normalized_scores_less_na)
+```
+
+Cluster 
+
+```{r}
+sdr_data_imputed <- sdr_data_imputed %>% 
+  remove_rownames %>% 
+  column_to_rownames(var="country")
+```
+
+
+```{r}
+fviz_nbclust(sdr_data_imputed, kmeans, method = "silhouette") 
+```
+
+
+```{r}
+k2 <- kmeans(sdr_data_imputed, centers = 2)
+```
+
+```{r}
+fviz_cluster(k2, data = sdr_data_imputed) +
+  theme_minimal() 
+```
+
+Find key drivers of clustering (HI Appleseed Analysis)
+
+
+
+Random Forest
+
+
+```{r}
+rf_matmort <- randomForest(normalized_score_sdg3_matmort ~ .,
+                             data = sdr_data_imputed,
+                             importance = TRUE)
+```
+
+```{r}
+rf_matmort
+```
+
+```{r}
+importance_df <- as.data.frame(rf_matmort$importance)
+```
+
+
+```{r}
+importance_df_top_10 <- importance_df %>%
+  rownames_to_column(var = "variable") %>% 
+  slice_max(n = 10, order_by = `%IncMSE`)
+```
+
+```{r}
+ggplot(importance_df_top_10, aes(x = `%IncMSE`, y = reorder(variable, `%IncMSE`))) +
+  geom_bar(stat = "identity", fill = "steelblue", color = "black") +
+  theme_minimal()
+  
+```
+Partial Dependence Plots
+
+Week 2 Day 1 - EDA - getting to know your data, troubleshooting
+Week 2 Day 2 - Bar chart, basic viz, Maps, Histogram, Bubble Plots
+
+Week 3 Day 1 - Scatterplot w/line, correlation matrices
+Week 3 Day 2 - Machine Learning, imputing data, clustering, random forest
+
+

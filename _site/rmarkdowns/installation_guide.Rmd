@@ -1,0 +1,198 @@
+---
+title: "Installation Guide"
+author: "Connor Flynn | Victoria DelaCruz"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+
+<img src="`r here::here('logos/SpiceLogo1.png')`" width="240" /> <img src="`r here::here('logos/cifal_logo.png')`" width="200" />
+
+
+
+### Overview
+
+Welcome! 
+
+The purpose of this page is to equip you with the software and tools necessary to successfully complete the certificate!
+
+You will:
+
+- Install R & R Studio
+  - The programming software and beautiful user interface that we will use to write code that builds plots, generates maps, performs statistics, etc..
+- Create a Github Account
+  - Github is the tool we use to collaborate, back-up our code, and showcase as our personal data science portfolio
+
+- Install Git
+  - The underlying software Github relies on
+
+- Link R Studio & Github
+
+- Learn how to accept and turn in assignments with R Studio and Github Classroom
+
+
+
+### Installing R and R Studio
+
+
+Follow this video created by Kristen Sosulski for the New York University's Stern School of Business
+
+
+
+
+```{r, echo=FALSE}
+vembedr::embed_url("https://www.youtube.com/watch?v=3f8TMPOZTLE")
+```
+
+
+
+
+### Create a Github Account
+
+Before you create your account, here are some awesome tips from [happygitwithr](https://happygitwithr.com/install-git)
+
+- Incorporate your actual name! People like to know who they’re dealing with. Also makes your username easier for people to guess or remember.
+- Reuse your username from other contexts, e.g., Twitter or Slack. But, of course, someone with no GitHub activity will probably be squatting on that.
+- Pick a username you will be comfortable revealing to your future boss.
+Shorter is better than longer.
+- Make it timeless. Don’t highlight your current university, employer, or place of residence, e.g. JennyFromTheBlock.
+
+
+
+[Visit Github](https://github.com/) and sign up for an account!
+
+
+Make your github profile more personal by [creating a README file](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-github-profile/customizing-your-profile/managing-your-profile-readme)
+
+Here is [my github account](https://github.com/ConnorFlynn) for reference
+
+
+```{r, echo=FALSE}
+vembedr::embed_url("https://www.youtube.com/watch?v=0FAQHfm2dsw")
+```
+
+### Check for / Install Git | Link R Studio & Github
+
+Here's where the magic happens! All of the content under this heading comes from the [Masters of Environmental Data Science Program at UC Santa Barbara, Bren School of Environmental Science & Management](https://ucsb-meds.github.io/) (my alma mater :) )
+
+
+
+
+#### Check for Git
+
+For Mac User
+
+You should already have git on your device, but let’s check for it anyway. 
+
+- Open RStudio
+
+- In the Terminal, **Mac** uses run the following command:
+
+```{bash eval=FALSE}
+which git
+```
+
+- In the Terminal, **Windowa** uses run the following command:
+
+```{bash eval=FALSE}
+where git
+```
+
+- If after running that you get something that looks like a file path to git on your computer, then you have git installed. For example, that might return something like this (or it could differ a bit): `/usr/local/bin/git`. 
+  - If you instead get no response at all,  [**mac users** should download & install git from Xcode](https://developer.apple.com/xcode/) and [**windows users** should download and install git here](https://git-scm.com/download/win)
+  
+  
+#### Configure git
+
+- In RStudio, open the Terminal. Run the following commands (by pressing Enter after each line), replacing the username (keep the quotation marks!) and email with your username and email used for your GitHub account. 
+
+```{bash eval=FALSE}
+git config --global user.name "Jane Doe"
+git config --global user.email janedoe@example.com
+```
+
+- Then, in the Terminal run the following, carefully checking that the name and email returned match your GitHub information: 
+
+```{bash eval=FALSE}
+git config --list --global
+```
+
+
+#### Store your GitHub personal access token (PAT)
+
+**First:** What even is a personal access token? From GitHub's documentation:
+
+> Personal access tokens (PATs) are an alternative to using passwords for authentication to GitHub when using the [GitHub API](https://docs.github.com/en/rest/overview/other-authentication-methods#via-oauth-and-personal-access-tokens) or the [command line](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#using-a-token-on-the-command-line).
+
+This means that in order to push your work (files, scripts, etc.) from your laptop (or any other computer) to GitHub, you'll need to first to generate a PAT.
+
+- Once you have git configured successfully, install the `usethis` package in R by running the following in the RStudio Console: 
+
+```{r eval=FALSE}
+install.packages(“usethis”)
+```
+    
+A lot of scary looking red text will show up while this is installing - don’t panic. If you get to the end and see something like below (with no error) it’s installed successfully.
+
+```{r, echo = FALSE, fig.out="60%", fig.align="center"}
+knitr::include_graphics(here::here("images/install-pkg-success.png"))
+```
+
+- Run the following in the RStudio Console: 
+
+```{r eval=FALSE}
+usethis::create_github_token() 
+```    
+
+- Enter your GitHub password when prompted. You’ll be taken to a screen that looks like this:
+
+```{r, echo = FALSE, fig.out="60%", fig.align="center"}
+knitr::include_graphics(here::here("images/new-pat.png"))
+```
+
+- In the **Note** field, you should see some autopopulated text: `R:GITHUB_PAT`. We suggest changing this to something that signifies what machine it's being used for. For example, if you are generating a PAT for your laptop, you might choose to rename it, `my_laptop`.
+
+- Next, you'll see a section called **Select scopes** with reasonable options already selected for you. Do not change anything. Just scroll down to the bottom of that page and click the green ‘Generate token’ button:
+
+```{r, echo = FALSE, fig.out="80%", fig.align="center"}
+knitr::include_graphics(here::here("images/generate-token.png"))
+```
+
+- Copy the generated PAT to your clipboard
+
+- Back in RStudio, in the console run:
+
+```{r eval=FALSE}
+gitcreds::gitcreds_set()
+```
+
+This will prompt you to paste the PAT you just copied from GitHub. Paste the PAT, press Enter to run. You should see something like this show up if all is well so far (you’ll have pasted your PAT where mine says “REDACTED”): 
+
+```{r, echo = FALSE, fig.out="40%", fig.align="center"}
+knitr::include_graphics(here::here("images/gitcreds-set.png"))
+```
+
+- In the RStudio Console, run: 
+
+```{r eval=FALSE}
+usethis::git_sitrep()
+```
+
+Does it return information about your connected GitHub account that looks something like below? Great! You’ve configured git and successfully stored your PAT. 
+
+```{r, echo = FALSE, fig.out="50%", fig.align="center"}
+knitr::include_graphics(here::here("images/git_sitrep.png"))
+```
+
+
+
+### Assistance 
+
+We're here to help you! If any of this doesn't go smoothly join us for office hours or set up a separate session with me by emailing me at connor.flynn@chaminade.edu. 
+
+- Performing all of the steps here is **essential** for the rest of the course so please reach out to us to get you up and running ASAP
+
+
+### How to accept and submit assignments

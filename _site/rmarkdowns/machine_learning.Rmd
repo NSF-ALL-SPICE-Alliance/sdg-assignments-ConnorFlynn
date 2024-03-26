@@ -1,0 +1,352 @@
+---
+title: "Machine Learning"
+author: "Connor Flynn | Victoria DelaCruz"
+output: html_document
+---
+
+
+
+
+
+
+<img src="`r here::here('logos/SpiceLogo1.png')`" width="240" /> <img src="`r here::here('logos/cifal_logo.png')`" width="200" />
+
+### Today's Topics
+
+1. **Clustering**: Are there *groups* of countries based on SDR 2023 Scores? How many groups are there? Which countries fall into which group?
+
+2. **Random Forest Regression**: Which of the 98 SDG Indicators in the 2023 Sustainable Development Report are the **strongest predictors** of maternal mortality?
+
+3. We cannot perform 1 and 2 above with missing data (NA values in the SDR 2023 Scores). **Imputation**: How can we take an educated guess on missing data?
+
+#### Setup
+
+Loading in our Libraries
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse) # most popular R package
+library(here) # cuts out long file paths when reading in data (makes reproducible)
+library(janitor) # cleans column names
+library(naniar) # analyzes missing data
+#library(missForest)
+library(cluster) 
+library(randomForest) # runs random forest algorithm
+library(missRanger) # imputes data through with random forest method
+library(factoextra) # visualizes clusters
+library(pdp)
+library(vembedr)
+```
+
+
+```{r, echo=FALSE}
+embed_url("https://www.youtube.com/watch?v=ZFtoi7PWjVw")
+```
+
+
+
+
+Read in 2023 Sustainable Development Data with *read_csv()* and *here()*
+
+
+
+```{r, message=FALSE}
+sdr_data <- read_csv(here("data/SDR-2023-Data.csv"))
+```
+
+Clean column names
+
+```{r}
+sdr_data <- sdr_data %>% 
+  clean_names()
+```
+
+
+Create a subsetted dataframe with only the country column and columns containing the text "normalized score"
+
+- using the select() function
+
+```{r}
+sdr_data_normalized_scores <- sdr_data %>% 
+  select(country, contains("normalized_score"))
+```
+
+#### Exploring missing data 
+https://epirhandbook.com/en/missing-data.html
+
+
+**Types of missing data**
+Here are three general types of missing data:
+
+1. **Missing Completely at Random (MCAR)**. This means that there is no relationship between the probability of data being missing and any of the other variables in your data. The probability of being missing is the same for all cases This is a rare situation.
+
+2. **Missing at Random (MAR)**. This name is actually a bit misleading as MAR means that your data is missing in a systematic, predictable way based on the other information you have. For example, maybe every observation in our dataset with a missing value for fever was actually not recorded because every patient with chills and and aches was just assumed to have a fever so their temperature was never taken. If true, we could easily predict that every missing observation with chills and aches has a fever as well and use this information to impute our missing data. In practice, this is more of a spectrum. Maybe if a patient had both chills and aches they were more likely to have a fever as well if they didn’t have their temperature taken, but not always. This is still predictable even if it isn’t perfectly predictable. This is a common type of missing data
+
+3. **Missing not at Random (MNAR)**. Sometimes, this is also called Not Missing at Random (NMAR). This assumes that the probability of a value being missing is NOT systematic or predictable using the other information we have but also isn’t missing randomly. In this situation data is missing for unknown reasons or for reasons you don’t have any information about. For example, in our dataset maybe information on age is missing because some very elderly patients either don’t know or refuse to say how old they are. In this situation, missing data on age is related to the value itself (and thus isn’t random) and isn’t predictable based on the other information we have. MNAR is complex and often the best way of dealing with this is to try to collect more data or information about why the data is missing rather than attempt to impute it.
+
+In general, imputing MCAR data is often fairly simple, while MNAR is very challenging if not impossible. Many of the common data imputation methods assume MAR.
+
+#### Analyzing missing data
+
+
+How  many cells do we have in the dataframe: sdr_data_normalized_scores?
+
+206 rows by 99 columns
+
+```{r}
+206 * 99
+```
+
+How many of those cells are NA?
+
+```{r}
+sum(is.na(sdr_data_normalized_scores))
+```
+
+Not bad, ~19 % of our data is missing 
+
+
+Do some columns/variables have more missing data than others? Or are NA's distributed equally across columns/variables?
+
+- use the gg_miss_var() function from the naniar package to display the percentage of na values for each variable
+
+```{r, fig.height=10}
+gg_miss_var(sdr_data_normalized_scores, show_pct = TRUE) +
+  theme(axis.text.y = element_text(size = 8)) 
+```
+
+
+Do some countries have more missing data than others?
+
+- Pivot longer to make a dataframe with a country column, a name column (variable), and a value column for that variable & country
+
+```{r}
+sdr_data_normalized_scores_longer <- sdr_data_normalized_scores %>% 
+  pivot_longer(cols = !country)
+```
+
+- With the new longer dataframe (sdr_data_normalized_scores_longer), group by country and calculate the percentage of variables with NA by using the miss_var_summary() function from nanaiar. 
+- Arrange countries from most missing data to least missing data
+
+```{r}
+missing_data_by_country <- sdr_data_normalized_scores_longer %>%
+ group_by(country) %>%
+ miss_var_summary() %>% 
+ arrange(desc(pct_miss))
+
+missing_data_by_country
+```
+
+27 countries in the 2023 SDR have NA values for every single normalized score. What are they?
+
+
+```{r}
+completely_na_countries  <- missing_data_by_country$country[missing_data_by_country$pct_miss == 100]
+completely_na_countries
+```
+Unfortunately, we cannot keep these countries in our analysis due to them not having any data for any of the sdg scores. The challenge of missing data in these countries is important, and needs to be acknowledged in this kind of work
+
+- Let's create a new dataframe (sdr_data_normalized_scores_no_na_countries) without these countries
+
+```{r}
+sdr_data_normalized_scores_no_na_countries <- sdr_data_normalized_scores %>% 
+  filter(!country %in% completely_na_countries)
+```
+
+With the new list of 179 countries (few of them are regions) let's take another look at missing data by variable/column
+
+We are only going to keep the variables/columns where less than 20% of the data is missing, so let's add a line to the plot to indicate the cutoff
+
+```{r, fig.height=10}
+gg_miss_var(sdr_data_normalized_scores_no_na_countries, show_pct = TRUE) +
+  theme(axis.text.y = element_text(size = 8)) +
+  geom_hline(yintercept = 20, color = "steelblue", linetype = "dashed")
+```
+
+Create a new dataframe that drops the columns/variables with >20% of the data missing
+
+
+```{r}
+sdr_data_normalized_scores_less_na <- sdr_data_normalized_scores_no_na_countries %>%
+  select(where(~ sum(is.na(.))/length(.) <= 0.2))
+```
+
+Impute the missing data using a random forest method from the missRanger package
+
+- There are many  methods to replacing na's
+  - Replace with the mean (could be considered oversimplified)
+  - Imputing based on data from "similiar" countries (Cluster Imputation)
+  - Imputing with decision trees (Random Forest)
+    - This can get very technical, so the main takeaway is that there are many ways to handle missing data and with our dataset, it seems that training a model to predict the missing values with decision trees is the most rigorous option
+    - Here's a [cool article](https://towardsdatascience.com/missforest-the-best-missing-data-imputation-algorithm-4d01182aed3) discussing random forest imputation 
+    
+
+
+```{r message=FALSE, results='hide'}
+sdr_data_imputed <- missRanger(sdr_data_normalized_scores_less_na)
+```
+
+#### Clustering
+
+Are there *groups* of countries based on SDR 2023 Scores? How many groups are there? Which countries fall into which group?
+
+Review this (excellent UC Business Analytics guide to clustering)[https://uc-r.github.io/kmeans_clustering]
+  
+  - We follow a very similar method
+
+The functions we are going to use to cluster require that the column being clustered (country), based on the information in all of the other columns (sdg scores) is actually the rownames of the dataframe
+
+- So, we simply shift the country column to become the rownames of the dataframe with this code
+
+```{r}
+sdr_data_imputed <- sdr_data_imputed %>%
+  remove_rownames %>%
+  column_to_rownames(var="country")
+
+```
+
+The function below assists us in determining the number of groups or clusters based on our data
+
+- Wherever the dashed line fall, is the number we will put into the next function: Kmeans()
+
+```{r}
+fviz_nbclust(sdr_data_imputed, kmeans, method = "silhouette")
+```
+
+
+The kmeans() function clusters countries into groups (int this case 2, visualized above) based on 84 SDG scores
+
+```{r}
+k2 <- kmeans(sdr_data_imputed, centers = 2)
+```
+
+
+We can visualize the outputs of the kmeans function with fviz_cluster()
+
+```{r}
+fviz_cluster(k2, data = sdr_data_imputed) +
+  theme_minimal()
+```
+
+You can view the countries and their assigned cluster in a dataframe with the code below
+
+
+```{r}
+country_clusters <- as.data.frame(k2$cluster)
+```
+
+
+
+
+### Random Forest Regression
+
+Which of the 98 SDG Indicators in the 2023 Sustainable Development Report are the **strongest predictors** of maternal mortality?
+
+To answer this question, we train a random forest model to make predictions of maternal mortality scores for each country and then ask the model which SDG Scores were the most important/influential in making it's prediction
+
+
+```{r}
+rf_matmort <- randomForest(normalized_score_sdg3_matmort ~ .,
+                             data = sdr_data_imputed,
+                             importance = TRUE)
+```
+
+Our model is relatively accurate with a mean error rate of ~ 10 
+
+The "% Var explained" value of 80.83 indicates that approximately 80.83% of the variance in the target variable (normalized_score_sdg3_matmort) is explained by the predictor variables included in the model.
+
+
+```{r}
+rf_matmort
+```
+
+Now we can look at the variables most important in making the predictions
+
+
+```{r}
+importance_df <- as.data.frame(rf_matmort$importance)
+```
+
+Let's take the top 10 and graph them
+
+```{r}
+importance_df_top_10 <- importance_df %>%
+  rownames_to_column(var = "variable") %>%
+  slice_max(n = 10, order_by = `%IncMSE`)
+```
+
+```{r}
+ggplot(importance_df_top_10, aes(x = `%IncMSE`, y = reorder(variable, `%IncMSE`))) +
+  geom_bar(stat = "identity", fill = "steelblue", color = "black") +
+  theme_minimal() +
+  labs(title = "Most Important Variables in Predicting Maternal Mortality",
+       subtitle = "Top 10",
+       y = "SDG Indicator",
+       x = "Feature Importance (% Increase in Mean Squared Error)")
+
+```
+
+
+
+
+
+Lastly, we want to know how these important variables influence the prediction: positively or negatively?
+
+- To answer this, we use partial dependence plots from the [pdp package](https://journal.r-project.org/archive/2017/RJ-2017-016/RJ-2017-016.pdf)
+
+
+```{r}
+pdp::partial(rf_matmort, pred.var = "normalized_score_sdg6_sanita", plot = TRUE)
+```
+
+
+*How to interpret*:
+  
+- yhat is the models prediction of maternal mortality scores
+  
+  - note the range is only from 77 to 85
+- the x axis is the SDG 6 sanitation score
+- Once the SDG 6 sanitation score reaches 40 the model starts to predict higher maternal mortality scores 
+- Remeber, this is a general trend for all countries in the dataset
+
+
+Now that we saw how one variable influences the models prediction, how about 2 variables?
+  
+
+
+```{r}
+pd <- pdp::partial(rf_matmort, pred.var = c("normalized_score_sdg6_sanita", "normalized_score_sdg3_u5mort"))
+# Default PDP
+plotPartial(pd)
+```
+
+*How to interpret*:
+
+- the y axis is SDG 3 under 5 mortality score
+- the the x axis is the SDG 6 sanitation score
+- the color is the models prediction of SDG 3 maternal mortality scores
+
+  - intuitively, the models prediction of SDG 3 maternal mortality scores increases when SDG 3 under 5 mortality score and SDG 6 sanitation score increase
+  
+
+#### <span style="color: red;">Challenge 1</span>
+
+Edit this code chunk `k2 <- kmeans(sdr_data_imputed, centers = 2)` under the silhouette plot to increase the number of clusters
+
+- Then, run the code chunk `fviz_cluster(k2, data = sdr_data_imputed) + theme_minimal()` to see the new visualization with the increased number of clusters
+  
+#### <span style="color: red;">Challenge 2</span>
+
+Edit this code chunk `rf_matmort <- randomForest(normalized_score_sdg3_matmort ~ ., data = sdr_data_imputed, importance = TRUE)` to predict a different indicator score (any indicator other than normalized_score_sdg3_matmort)
+
+- Rename the random forest model from rf_matmort to something that more accurately represents the model (base the name on the indicator you are predicting)
+
+  - Run the remainder of the code chunks below to see the different outputs
+    
+    - *Hint* make sure to continue replacing rf_matmort with the new name you assign your random forest model
+
+
+
+
+
+  

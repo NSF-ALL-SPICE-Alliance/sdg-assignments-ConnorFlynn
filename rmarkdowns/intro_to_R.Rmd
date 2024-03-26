@@ -1,0 +1,380 @@
+---
+title: "Welcome to R!"
+author: "Victoria DelaCruz | Connor Flynn"
+date: ""
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+<img src="`r here::here('logos/SpiceLogo1.png')`" width="240" /> <img src="`r here::here('logos/cifal_logo.png')`" width="200" />
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(vembedr)
+```
+
+
+```{r, echo=FALSE}
+embed_url("https://www.youtube.com/watch?v=9CUGZ9bcpek")
+```
+
+
+### Today's Topics
+
+Welcome to R! We'll go over some brief introductory information on how to get started programming in R and R Studio, exploratory data analysis, and helpful coding resources. 
+
+1. Packages and Libraries
+2. Variables and Data
+3. Exploratory Data Analysis
+4. Resources
+5. Challenge!
+
+### Packages and Libraries
+One of the most helpful tools to an R programmer are R packages! In a nutshell, an R package is a toolbox that can have a variety of things that can be useful to you (datasets, functions, etc.). Packages are stored in a *library* in R. You already have some R packages installed - let's use the `library()` function to see which packages you have. 
+
+```{r}
+library()
+```
+
+A new window should have opened up with a list of packages and a short description! 
+
+*Note*
+
+We used the `library()` function within a code chunk (discussed last video). We use code chunks in R Markdowns so that R can differentiate between normal text, like this, and code. 
+
+  - The keyboard shortcut to create a code chunk is 
+  
+    - For mac: Cmd + option + i
+    - For PC: Ctrl + alt + i
+  
+  - The beginning of a code chunk will always start with three dashes followed by {r} and end with three dashes
+
+
+#### Installing a Package
+
+Let's say you want to start using the tidyverse package to make cool visualizations, but haven't installed it yet. **Run the following code in the console** to install it: install.packages("tidyverse") 
+
+Hint: The *console with the code you need to write* is pictured below
+
+
+<img src="`r here::here('images/console.png')`" /> 
+
+Note: it's very important to follow the coding syntax (make sure the package name is in quotes within the parentheses). 
+
+Let's double check to see if it installed correctly using the following code:
+
+```{r}
+system.file(package = "tidyverse") # input the name of the package in quotes
+```
+
+If you got a response giving you a file path - you're all set! You successfully installed your first package! 
+
+#### Loading a Library
+
+To be able to use the package and its functions in R Studio, we need to load the library (a library is where the package is stored). Run the following code to load the tidyverse library in your R session:
+
+```{r, message=FALSE}
+library(tidyverse) # put the name of the package/library in the parenthesis 
+```
+Awesome! Now we can access the many cool things that the tidyverse package can do for us. We'll start using this package and its functions as we go along.
+
+[Check out the tidyverse package documentation](https://www.tidyverse.org/)
+
+### Variables
+
+In order to easily access datasets and values, we need to store them somewhere! That's what variables are for. Variables are containers for storing data values. Here are some basic rules for creating variables:
+
+1. They are created by using the <- or = sign. 
+2. The coding syntax depends on what type of data value you are trying to store:
+    a. Character strings are stored within quotations.
+    b. Numeric values are not surrounded by any symbols (unless you are trying to create a series of numbers).
+
+Let's practice creating some variables:
+
+1. my_name
+```{r}
+my_name <- "Victoria DelaCruz" # character strings are stored within quotations
+my_name # run the name of your variable to see the output
+```
+
+2. my_age
+```{r}
+my_age = 20 # numeric values do not need any quotations
+my_age # run the name of your variable to see the output
+my_age + 5 # how old will you be in 5 years?
+```
+
+#### <span style="color: red;">Challenge 1</span>
+Create a my_name variable with your name assigned to the variable instead of "Victoria DelaCruz". Then, create a my_age variable with your age. 
+
+#### Different Types of Data
+
+Understanding the different types of data is crucial when building out your visualizations and throughout the data analysis process. It is super useful when trying to figure out what graph to use or what story you're trying to tell through your data.
+
+##### Qualitative vs. Quantitative
+
+The main two types of data are qualitative and quantitative:
+
+- Qualitative data is categorical data, or an easier way to remember this is any values that are in words or letters. Common examples include gender, home town, etc. Sometimes, qualitative data can be presented as a numeric, but still have categorical/qualitative value (for example, postal codes).
+
+- Quantitative data is numerical data and is represented by numbers. There are two types of quantitative data:
+  - Discrete data is FINITE, or in other words, only whole numbers. For example, the number of students taking this course.
+  - Continuous data is INFINITE, or in other words, can be decimal points and is almost impossible to count. For example, temperature ranges and time intervals.
+  
+Note: in most common and basic plots, discrete variables are used for the x-axis and continuous variables are used for the y-axis.
+
+
+<img src="`r here::here('images/types_of_data.png')`" /> 
+
+
+
+##### R Data Types
+
+There are different data types in R:
+
+- character (also known as strings; "a", "cat")
+- numeric (1, 25.2)
+- integer (numeric data without decimals)
+- logical (also known as Boolean; TRUE or FALSE)
+- complex (9 + 2i, where "i" is an imaginary number)
+
+To put this into perspective with our knowledge on qualitative and quantitative data:
+
+In most cases, characters and logical R data types are considered qualitative data. Numeric, integer, and complex are mostly considered quantitative data. 
+
+The [University of Cincinnati](https://uc-r.github.io/introduction) has a great resource on understanding data types and introducing R in general! 
+
+#### Removing Variables
+
+If you want to remove or delete a variable, you can run the following code:
+
+```{r}
+rm(my_name) # input the variable name in the parenthesis
+```
+
+#### Variables Best Practices
+##### Naming Variables
+
+It's important to name your variables wisely. Here are some naming recommendations:
+
+- Variables can start with letters or dot characters (for ex. .var or var)
+- It should NOT start with numbers or an underscore
+- The only symbols that are allowed in variable names are . and _ (no $,%,& allowed)
+- It should NOT be a reserved keyword in R (see this [link](https://www.datamentor.io/r-programming/reserved-words) for a list of reserved keywords)
+
+##### Creating New Variables
+
+After you read in your dataset and assign it to a variable (which we're going to do in a bit), the next step is to manipulate, clean, and subset your data. As you start to play around with your data, it's recommended to assign the clean or modified version of your data to a new variable. 
+
+In other words, it's good practice to keep your original dataset in the event you need to refer to it in the future.
+
+### Functions
+
+In the programming world, functions are used to complete tasks quickly and efficiently. They are many built-in functions in different R packages, and we can write functions ourselves! At this point in the lesson, we've already used and called several functions (library, system.file, and rm). In most cases, you'll know you're using a function when you input arguments within a parenthesis (). 
+
+What are arguments? 
+
+When we talk about arguments, we mean the specifications and variables you input within a function. For example, when we did our `libary()` call, the argument or input was the name of the library/package we wanted to load. 
+
+We'll get to some of the most common functions used in the next section, as we'll apply them to our dataset! 
+
+### Exploratory Data Analysis
+
+Let's start looking into a dataset. In data science, we perform exploratory data analysis (EDA) to learn more about different patterns and relationships in our data. Run the following code to import the *SDR 2023* dataset that we'll be performing EDA on:
+
+#### Loading Libraries
+```{r, message=FALSE}
+library(here) # allows us to cut out long file paths, ensures reproducibility
+library(janitor) # helps us clean column names
+```
+
+Note: **You will most likely get an error.** If you get an error about not having these packages installed, run the install.packages("packagename") code in the console. We went over this on line 48 under the *Installing a Package* header
+
+Example of this kind of error pictured here:
+
+
+<img src="`r here::here('images/library_error.png')`" /> 
+
+In the code chunk below, we use the `read_csv()` function to read in the csv file called *SDR-2023-Data.csv* in our data folder. 
+
+  - We use the `here()` function to cut out long file paths. Instead of starting at the home directory on our computer and having to point R towards the csv file we want to read in with *"Users/Victoria/data_science/SDR-2023-Landscape/SDR-2023-Data.csv"*, we can simply tell R to start within the directory of our current R project and find the SDR-2023-Data.csv in our data folder. 
+  
+    - This also **ensures reproducibility** because as long as we share R projects on github, our project directories will always be the same
+```{r, message=FALSE}
+sdr_data <- read_csv(here("data/SDR-2023-Data.csv")) # assigning the dataset to a variable so that we can look at/reference it
+# to view the whole dataset you can click on sdr_data in your environment pane at the top right of your screen)
+```
+Cleaning names
+```{r}
+sdr_data <- clean_names(sdr_data) # cleaning column names 
+```
+
+Note: In programming, we don't use spaces in names (usually, if you want to use a space between words, you'd use an underscore, slash, or other punctuation). That's why we used the `clean_names` function from the `janitor` package, to clean our column names and replace spaces with underscores.
+
+#### Understanding Your Data
+
+Understanding what your data looks like is crucial to the data analysis process. Let's run some code to see what our SDR 2023 dataset is telling us:
+
+```{r}
+head(sdr_data) # view the first couple of rows and columns of your dataset
+```
+
+As we talked about earlier, it's always helpful to know what types of data you're handling. The code below shows us what type of data type each column holds (for ex., chr = character, num = numeric), the number of rows (you'll see that it's 206:666, meaning 206 rows and 666 columns), and some of the first few values for each column. 
+
+```{r, include = FALSE}
+data_structure <- str(sdr_data) # looking at the data structure
+```
+
+Wow, that's a lot of information on the dataset structure! Let's run some code to look at some of these aspects closely:
+
+- Viewing column names
+```{r}
+column_names <- as.list(colnames(sdr_data))  # click on column_names in your environment pane at the top right of your screen to check them out
+
+```
+
+- How many rows and columns
+```{r}
+dim(sdr_data) # looking at dimensions
+```
+
+- How many NA values are there in the dataset?
+
+NA values represent missing values in our data. It's important to know how many NA values are in your data to better understand how to clean and prepare your data for analysis. Let's load the `naniar` package as we'll be using the function `miss_var_summary()` to see our NA values. 
+
+```{r}
+library(naniar) # helpful package to view missing data
+```
+
+Note: if you run into an error loading the `naniar` package, run the install.packages() code in the console that we went through earlier
+
+```{r}
+sdr_data %>% 
+  miss_var_summary() %>% 
+  arrange(desc(pct_miss))
+```
+
+Note: In the above code, we are using the `%>%` (pipe) operator. This allows us to connect functions within our code so that it performs each step at a time. We start off with our data (sdr_data), then use the pipe operator to use the miss_var_summary() function, and then again to use the arrange() function. 
+
+Check out this cool [resource that further explains the pipe operator](https://uc-r.github.io/pipe)
+
+- Looking at responses for a specific column
+
+Let's say we're interested in looking at the different values for the column *Goal 7 Dash*. Run the following code to create a table on the types of values and frequency in that column:
+
+```{r}
+table(sdr_data$goal_7_dash) # after the $ operator, write the name of the column you're interested in exploring
+```
+Awesome! Let's try to input two columns to explore further: 
+
+```{r}
+table(sdr_data$goal_7_dash, sdr_data$regions_used_for_the_sdr) # looking at 2 columns, separated by a ,
+```
+Now you can see how many countries in each region got green, orange, red, and yellow scores for SDG Goal 7. We've also used 8 new functions (View, read_csv, head, dim, etc.). Great job!
+
+#### Cleaning and Manipulating Data 
+
+The next step is cleaning and manipulating data. There are different ways to do this, depending on what your goals are and what specific aspects or relationships you're trying to show. We'll be going over some common data cleaning and manipulation functions that are found in the tidyverse package that we've already loaded.
+
+
+*1. select()*
+
+Select is a function used to subset or select columns in your R data frame. Let's try this out by selecting the SDG 3 and SDG 4 scores.
+
+```{r}
+sdr_data %>% 
+  select(goal_3_score, goal_4_score)
+```
+
+You'll notice we used the pipe operator ` %>% ` after the name of the dataframe, and then listed the columns we were interested in the select() function
+
+What if we want to subset specific rows? We can do this by using the filter function. 
+
+#### <span style="color: red;">Challenge 2</span>
+Using the `select()` function, select two new SDG goal scores. Assign it to a variable named `SDG_scores`. 
+
+*2. filter()*
+
+Similarly to select, `filter()` can be used to extract specific rows. Let's try this out by filtering our data for those within the Oceania region.
+
+In order to do this, we write out the column name "regions_used_for_the_sdr" followed by == and then "Oceania". 
+
+```{r}
+sdr_data %>% 
+  filter(regions_used_for_the_sdr == "Oceania")
+```
+
+Notes: 
+
+- As we went over earlier, the = sign is used to assign variables. If we want to program the equal sign (for example, 2 = 2), we need to use two equal signs!
+
+- In the filter example we just did, we are filtering for Regions that are EQUAL to "Oceania", hence the two equal signs. 
+
+#### <span style="color: red;">Challenge 3</span>
+Using the `filter()` function, filter for another region other than Oceania. Assign it to a variable named `new_region`. 
+
+**Important**
+
+When executing the last 2 code chunks, notice that we did not use the assign arrow `<-`, therefore, we did not create any new dataframes
+
+  - If we want to create a new dataframe that is a subsetted version of the original dataframe we need the `<-`
+      
+    - Example Below:
+    
+```{r}
+oceania_data <- sdr_data %>% 
+  filter(regions_used_for_the_sdr == "Oceania")
+```
+
+Now, you will have a dataframe called *oceania_data* in your environment pane (top right of the screen) that you can click on
+  
+*3. group_by() and summarise()*
+
+- the `group_by()` function is a great way to view and group a column. This function goes hand-in-hand with another useful function, `summarise()`. Summarise is used to compute summary statistics or aggregate data within each group created by `group_by()`. 
+
+  - Here we will find the average SDG 7 score for each region 
+
+```{r}
+sdr_data %>% 
+  group_by(regions_used_for_the_sdr) %>% 
+  summarise(mean_goal_7_score_by_region = mean(population_using_at_least_basic_drinking_water_services_percent))
+```
+
+
+*4. pivot_longer*
+
+Pivot_longer is used to turn wide datasets to a "long" data format, or in other words, reshaping the data. Let's try this out with selecting and looking at Goal 7 indicators. In the following coding example, we'll first start off with our data and a function that we already know, `select()`. Then, we're using the pipe operator to use `pivot_longer` to reshape our data.
+
+In the pivot_longer function, we input the names of the columns to pivot (in this case, it's all the indicator columns we've selected, then the name of the *new* column we want the names of the old columns to be stored in (we're naming this new column "Indicator"). 
+
+```{r}
+sdr_data %>% 
+  select(country, population_with_access_to_clean_fuels_and_technology_for_cooking_percent, co2_emissions_from_fuel_combustion_per_total_electricity_output_mt_co2_t_wh, population_with_access_to_electricity_percent, renewable_energy_share_in_total_final_energy_consumption_percent) %>%
+  pivot_longer(cols = -country, names_to = "Indicator") # cols = -country means to pivot every column selected other than country
+```
+
+
+### For Next Session - Different Types of Graphs
+
+After learning all this information about your data and data manipulation, how do you know what types of graphs to make, and what code to use?
+
+One of the first questions you want to ask yourself is what am I trying to show? Am I looking to compare values, show correlation, distribution, or changes over time? 
+
+![Source: https://datavizblog.files.wordpress.com/2013/04/andrew-abela-chart-chooser-in-color.jpg](https://datavizblog.files.wordpress.com/2013/04/andrew-abela-chart-chooser-in-color.jpg)
+There's an awesome resource called [The R Graph Gallery](https://r-graph-gallery.com/index.html) that helps you through that process! It's a great place to look for visualization inspiration and includes R template code for you to follow.
+
+Another cool resource is called [from Data to Viz](https://www.data-to-viz.com/). This provides a guide based on the number and types of variables you have, and provides examples and code as well! 
+
+ 
+### Resources
+
+The awesome thing about data science is that there are so many helpful resources to help you get started and throughout your data career. Here is a list of common resources that you may find helpful:
+
+- [W3 Schools](https://www.w3schools.com/r/default.asp)
+- [Geeks for Geeks](https://www.geeksforgeeks.org/r-tutorial/?ref=outind)
+- [Stack Overflow](https://stackoverflow.com/questions/tagged/r)
+- [R Bloggers](https://www.r-bloggers.com/2015/12/how-to-learn-r-2/)
+- [Univeristy of Cincinnati Business Anlytics R Programming Guide](https://uc-r.github.io/introduction)
+
+

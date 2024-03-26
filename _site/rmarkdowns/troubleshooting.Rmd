@@ -1,0 +1,145 @@
+---
+title: "Troubleshooting Guide"
+author: "Connor Flynn | Victoria DelaCruz"
+date: ""
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(vembedr)
+```
+
+
+
+```{r, echo=FALSE}
+embed_url("https://www.youtube.com/watch?v=hEFO1U91DjY")
+```
+
+
+Welcome to the Troubleshooting Guide! If you run into errors as we code along during this course, don't get discouraged! Running into errors is something that all data scientists have in common, so let's go through some of the most common errors and helpful debugging resources.
+
+What does an error in R look like? It pops up in your console as a different color, usually starts with "Error", and continues to tell you what specific line of code caused the error and a description. 
+
+### Package and Library Errors
+
+Library and package errors are one of the most common errors and usually happens early on in your code. A package error tends to happen when you haven't installed the package yet, but are trying to load it as a library. Let's try to load in the fortunes package (we haven't installed this yet!): `library(fortunes)`
+
+
+<img src="`r here::here('images/library_error.png')`" />
+
+
+You may have gotten an error like the one in the photo - so how do we fix this? Install the package!
+
+Note: run the `install.packages("fortunes")` code without the hashtag
+
+```{r}
+#install.packages("fortunes") # run the install code 
+```
+
+Now let's try to load in the fortunes package one more time:
+
+```{r}
+library(fortunes) # run the library code
+```
+
+Awesome! Another error you might come across is a library error - meaning, you're trying to use functions from specific packages, but haven't loaded them in your R session yet. Every time you open up your R session, you have to load in your libraries! Let's try to use the common `ggplot()` function from the tidyverse package (remember, we haven't loaded in the tidyverse package yet): `ggplot(data=iris)+  geom_point(mapping=aes(x=Petal.Length,y=Petal.Width))`
+
+
+
+<img src="`r here::here('images/function_error.png')`" />
+
+It says it could not find the function "ggplot"... we can fix this by running the library code to load in the tidyverse package.
+
+```{r}
+library(tidyverse)
+```
+Try the ggplot code again:
+```{r}
+ggplot(data=iris)+
+  geom_point(mapping=aes(x=Petal.Length,y=Petal.Width))
+```
+
+Great job! 
+
+### File path Errors
+
+File path names are super important to know how to get, especially when you're trying to import files into your R session. Try to import the dataset by using the `read_csv()` function and the name of your dataset as your input:
+`filepath_data <- read_csv("SDR-2023-Data.csv")`
+
+
+
+<img src="`r here::here('images/filepath_error.png')`"  />
+
+You probably got an error saying that the data doesn't exist, but we know that it does. It's because we didn't write in the proper file path name. 
+
+How do you get the file path name? 
+
+- For Mac users, you can read this [article](https://support.apple.com/guide/mac-help/get-file-folder-and-disk-information-on-mac-mchlp1774/mac#:~:text=On%20your%20Mac%2C%20click%20the,bottom%20of%20the%20Finder%20window.) under *Show the path to a file or folder*. 
+- For Windows users, you can read this [article](https://www.wikihow.com/Find-a-File%27s-Path-on-Windows)
+
+Let's try to read in our data with the proper file path name:
+```{r}
+# filepath_data <- read_csv("/Users/victoriadelacruz/Desktop/R/Projects/SDR-2023-Landscape/data/SDR-2023-Data.csv")
+```
+Note: your computer user name will most likely show up in the file path name along with the different folders your R project and data are in (no one will have the same exact file path name)
+
+Success!
+
+### Syntax Errors
+
+Syntax errors occur when you have missing or unmatched parentheses, curly braces, square brackets, or quotes. Try to run this code with a missing parenthesis: `library(tidyverse`
+
+
+<img src="`r here::here('images/syntax_error.png')`" />
+
+You probably didn't get an error message, rather, a couple of plus signs. This means that your code is incomplete. Add the missing parenthesis and you're good to go!
+
+### Typos 
+
+Although typos may not seem like a big deal, they definitely are in code! Let's attempt to print the filepath_data variable we made earlier:`print(filepath_dat)`
+
+
+<img src="`r here::here('images/typo_error.png')`" />
+
+As you can see, the error message we got says that 'filepath_dat' was not found - this is because we have a typo. These can be tricky to find as it doesn't explicitly tell us that it was a spelling error. Let's correct our typo:
+
+```{r}
+# print(filepath_data)
+```
+
+Looks great! 
+
+### Solutions and Resources
+
+There are going to be different types of errors you might encounter that was not covered in this troubleshooting guide. Here are some tips to help you resolve them:
+
+1. Google Search
+
+Google will be your best friend when it comes to solving errors! You can copy and paste your error into a Google search, and it will show you a bunch of resources and solutions others have done (chances are, someone else has run into the same or similar error). 
+
+2. ChatGPT
+
+You can do the same with ChatGPT - copy and paste your error and it will lead you to some possible solutions. You may have to play around with what ChatGPT provides (for example, making sure your variable names are correct) to ensure you're running the code you intended to. 
+
+3. Help Page
+
+R has useful help pages for almost all packages and functions. For easy access to the help page, you can type `?function_name()` or `?package_name`. Let's try this out with the ggplot() function:
+
+```{r}
+?ggplot() # type in the function or package name after the question mark
+```
+
+This code should have opened up the help page on the side. This contains what arguments the function takes in as well as some examples you could run to better understand how it works. 
+
+4. Resources
+
+After doing a Google search, you'll get a bunch of resources that you can look to. Here are some recommendations:
+- [W3 Schools](https://www.w3schools.com/r/default.asp)
+- [Geeks for Geeks](https://www.geeksforgeeks.org/r-tutorial/?ref=outind)
+- [Stack Overflow](https://stackoverflow.com/questions/tagged/r)
+- [R Bloggers](https://www.r-bloggers.com/2015/12/how-to-learn-r-2/)
